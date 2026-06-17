@@ -16,14 +16,12 @@ namespace BankApp.Tests.Features.MakeDeposit
         public static MakeDepositCommandHandler MakeDepositCommandHandler { get; set; }
         public static MakeDepositResult Result { get; set; }
         public static MakeDepositRequest Request { get; set; }
-
         public static IRepository<Customer> CustomerRepository { get; set; }
 
-        [Fact]
-        public async Task The_balance_should_increase_by_the_deposit_amount()
+        public When_making_a_deposit()
         {
-            // Given (arrange) - implementation of business logic - this is what we expect to change
-            var command = new MakeDepositRequest
+            // this is the arrange/setup/initialization for the test class, so that we don't have to repeat it in each test, and if we need to change it later we only have to change it in one place
+            Request = new MakeDepositRequest
             {
                 CustomerId = 5,
                 AccountId = 17,
@@ -32,15 +30,34 @@ namespace BankApp.Tests.Features.MakeDeposit
             var testAccount = new Account (200.00m);
             var testCustomer = new Customer([testAccount]);
 
+            CustomerRepository = Substitute.For<IRepository<Customer>>(); // NSubstitute package for mock data
+            CustomerRepository.GetByIdAsync(Request.CustomerId).Returns(testCustomer);
+
+            MakeDepositCommandHandler = new MakeDepositCommandHandler(CustomerRepository);
+        }
+
+        [Fact]
+        public async Task The_balance_should_increase_by_the_deposit_amount()
+        {
+            // Given (arrange) - implementation of business logic - this is what we expect to change
+            // var command = new MakeDepositRequest
+            // {
+            //     CustomerId = 5,
+            //     AccountId = 17,
+            //     Amount = 100.00m
+            // };
+            // var testAccount = new Account (200.00m);
+            // var testCustomer = new Customer([testAccount]);  // moved to constructor
+
             var expectedBalance = 300.00m;
 
-            CustomerRepository = Substitute.For<IRepository<Customer>>(); // NSubstitute package for mock data
-            CustomerRepository.GetByIdAsync(command.CustomerId).Returns(testCustomer);
+            // CustomerRepository = Substitute.For<IRepository<Customer>>(); // NSubstitute package for mock data
+            // CustomerRepository.GetByIdAsync(command.CustomerId).Returns(testCustomer);
 
-            var MakeDepositCommandHandler = new MakeDepositCommandHandler(CustomerRepository);
+            // var MakeDepositCommandHandler = new MakeDepositCommandHandler(CustomerRepository);
 
             // When (action/act) - should almost never have to modify the act or assert, unless the expected business logic changes
-            Result = await MakeDepositCommandHandler.HandleAsync(command); // can make Handle async, so lets do that, just because we can
+            Result = await MakeDepositCommandHandler.HandleAsync(Request); // can make Handle async, so lets do that, just because we can
 
             // Then (result/assert) - should abosolutely never have to modify the assert, unless the expected business logic changes
             Result.Balance.Should().Be(expectedBalance);
@@ -49,22 +66,8 @@ namespace BankApp.Tests.Features.MakeDeposit
         [Fact]
         public async Task The_caller_should_be_notified_of_success() // caller wording not customer just because we really don't know if the initiaator of this will be a customer or some other source/user
         {
-            var command = new MakeDepositRequest
-            {
-                CustomerId = 5,
-                AccountId = 17,
-                Amount = 100.00m
-            };
-            var testAccount = new Account (200.00m);
-            var testCustomer = new Customer([testAccount]);
-
-
-            CustomerRepository = Substitute.For<IRepository<Customer>>(); // NSubstitute package for mock data
-            CustomerRepository.GetByIdAsync(command.CustomerId).Returns(testCustomer);
-
-            var MakeDepositCommandHandler = new MakeDepositCommandHandler(CustomerRepository);
             
-            Result = await MakeDepositCommandHandler.HandleAsync(command);
+            Result = await MakeDepositCommandHandler.HandleAsync(Request);
             Result.Succeeded.Should().Be(true);
         }
     }
