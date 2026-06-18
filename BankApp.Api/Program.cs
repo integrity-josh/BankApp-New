@@ -1,3 +1,4 @@
+using BankApp.Data;
 using BankApp.Domain.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,7 +7,39 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+// we have three lifecycles to choose from for mapping DI here
+    // singleton - one instance for everyone forever - inject that container one time only, reuse that for every request until the server shuts off
+        // not common - we have different users, usually don't want to reuse the same instance for every user, but could be useful for something like a logger, where we want to reuse the same instance for every user
+        // for when you really only need one, and everyone can just use it/share it
+        // doesnt work well for things that are going to be changed after they are created, because syncing changes just doesn't work well with it
+    // scoped - one instance per request, for the whole request
+        // throughout lifespan of the request, something that has scoped will instantiate the object, then reuse that same instance for every time it's called during that request, but then once the request is done, that instance is done, and a new one will be created for the next request
+        // good for repositories, or units of work
+            // everything done in that unit of work all needs to succeed or fail together, so you want to use the same instance for everything in that unit of work, but then once that unit of work is done, you want to get rid of that instance and start fresh for the next unit of work
+        // this is part of UNIT OF WORK pattern
+            // tracks changes but commits at the end
+            // do all you want, but nothing actually sends those changes back to the DB until you complete the transaction
+            // EF implements this pattern, or you could create a custom unit of work object that implements it
+                // ex: we hypothetically instead of using save changes in the code, we had in the pipeline that when a request was over to call EF save changes
+    // transient - one instance every time you ask for it
+        // every place it's injected gets a new instance of the class
+        // transient objects live the shortest generally, meaning they are least available to be shared, and are most disposable, takes up the least resources
+        // can't reuse it for anything
+        // middleground between this and singleton which can always be used by everyone forever and never goes away, we can scope
+            // common use cases:
+                // we scope repositories, 
+                // and most else is transient
+                // GENERAL PRINCIPLE - MAKE IT TRANSIENT UNLESS YOU CAN'T
+                    // because it uses the least resources
+                    // if you can't, have a good reason for it
+                        // one good reason, is if you use a lot of transient objects which could have resused the same resources instead, you then use up way more resources by recreating those dependencies for every transient object
 
+
+    // when deciding, think of the implication that resources are precious as we are working in systems with 1000s of active users, so small increases in usage are exponential
+    
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+    //typeof to inject an abstraction, and then the implementation, and then we can use that abstraction in our code, and it will inject the implementation for us
+    // this allows us to do things like create mock data, test versions and implement them in here
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
