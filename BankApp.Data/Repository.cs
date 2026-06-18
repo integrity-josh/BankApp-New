@@ -8,11 +8,18 @@ using BankApp.Domain.Infrastructure;
 
 namespace BankApp.Data
 {
-    public class Repository<T> : IRepository<T> where T : AggregateRoot
+    public class Repository<T>(BankAppDbContext dbContext) : IRepository<T> where T : AggregateRoot
     {
-        public Task<T>? GetByIdAsync(int id)
+        public async Task<T?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            // this will not load Accounts when we get a customer, we will need to use a query for that or similar
+            
+            return await dbContext.Set<T>().FindAsync(id);
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await dbContext.SaveChangesAsync();
         }
     }
 }
