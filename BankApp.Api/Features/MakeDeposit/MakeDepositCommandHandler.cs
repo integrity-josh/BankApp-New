@@ -5,10 +5,12 @@ using System.Threading.Tasks;
 using BankApp.Domain.Repositories;
 using BankApp.Domain.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using BankApp.Domain.Specifications;
+using MediatR;
 
 namespace BankApp.Api.Features.MakeDeposit
 {
-    public class MakeDepositCommandHandler
+    public class MakeDepositCommandHandler: IRequestHandler<MakeDepositRequest, MakeDepositResult>
     {
         private readonly IRepository<Customer> _customerRepository;
 
@@ -17,7 +19,9 @@ namespace BankApp.Api.Features.MakeDeposit
             _customerRepository = customerRepository;
         }
 
-        public async Task<MakeDepositResult> HandleAsync(MakeDepositRequest command)
+        // after implementing MediatR, we need to change the method signature to match the IRequestHandler interface, which requires us to implement a Handle method that takes in a MakeDepositRequest and returns a MakeDepositResult, and we also need to add the async keyword to the method signature, and we need to change the return type to Task<MakeDepositResult> to indicate that this is an asynchronous method that will return a MakeDepositResult when it completes
+        // change from HandleAsync to Handle to match the IRequestHandler interface
+        public async Task<MakeDepositResult> Handle(MakeDepositRequest command, CancellationToken cancellationToken)
         {
             // return new MakeDepositResult
             // {
@@ -27,8 +31,12 @@ namespace BankApp.Api.Features.MakeDeposit
             //     Succeeded = true
 
             // };
-            var customer = await _customerRepository.GetByIdAsync(command.CustomerId);
-            if (customer == null)
+            var customerQuery = new GetSingleCustomerWithAccounts(command.CustomerId); // implement specification
+            var customer = await _customerRepository.GetByIdAsync(customerQuery); 
+            
+            // var customer = await _customerRepository.GetByIdAsync(command.CustomerId);
+
+            if (customer is null)
             {
                 throw new KeyNotFoundException($"Customer with Id {command.CustomerId} not found.");
             }

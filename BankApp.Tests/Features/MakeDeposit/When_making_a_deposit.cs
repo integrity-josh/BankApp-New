@@ -9,6 +9,7 @@ using BankApp.Domain.Repositories;
 using BankApp.Domain.Entities;
 using NSubstitute;
 using BankApp.Domain.ValueObjects;
+using NSubstitute.ExceptionExtensions;
 
 namespace BankApp.Tests.Features.MakeDeposit
 {
@@ -64,7 +65,9 @@ namespace BankApp.Tests.Features.MakeDeposit
             // var MakeDepositCommandHandler = new MakeDepositCommandHandler(CustomerRepository);
 
             // When (action/act) - should almost never have to modify the act or assert, unless the expected business logic changes
-            Result = await MakeDepositCommandHandler.HandleAsync(Request); // can make Handle async, so lets do that, just because we can
+            // Result = await MakeDepositCommandHandler.Handle(Request); // can make Handle async, so lets do that, just because we can
+            Result = await MakeDepositCommandHandler.Handle(Request, CancellationToken.None);
+
 
             // Then (result/assert) - should abosolutely never have to modify the assert, unless the expected business logic changes
             Result.Balance.Should().Be(expectedBalance);
@@ -74,22 +77,61 @@ namespace BankApp.Tests.Features.MakeDeposit
         public async Task The_caller_should_be_notified_of_success() // caller wording not customer just because we really don't know if the initiaator of this will be a customer or some other source/user
         {
             
-            Result = await MakeDepositCommandHandler.HandleAsync(Request);
+            // Result = await MakeDepositCommandHandler.Handle(Request);
+            Result = await MakeDepositCommandHandler.Handle(Request, CancellationToken.None);
+
             Result.Succeeded.Should().Be(true);
         }
 
     }
     public class When_making_a_deposit_and_the_account_does_not_exist
     {
-        [Fact]
-        public void The_caller_should_be_notified_of_failure()
-        {
+        public static MakeDepositCommandHandler MakeDepositCommandHandler { get; set; }
+        public static MakeDepositResult Result { get; set; }
+        public static MakeDepositRequest Request { get; set; }
+        public static IRepository<Customer> CustomerRepository { get; set; }
 
+        public When_making_a_deposit_and_the_account_does_not_exist()
+        {
+            // arrange/setup/initialization
+            
+            // var testAccount = new Account (200.00m);
+            var testCustomer = new Customer(
+                new PersonName("Test", "Customer"), 
+                []
+                );
+
+            Request = new MakeDepositRequest
+            {
+                CustomerId = 1,
+                AccountId = 1,
+                Amount = 100.00m
+            };
+            
+
+            CustomerRepository = Substitute.For<IRepository<Customer>>(); // NSubstitute package for mock data
+            CustomerRepository.GetByIdAsync(Request.CustomerId).Returns((Customer?)null);
+
+            MakeDepositCommandHandler = new MakeDepositCommandHandler(CustomerRepository);
         }
 
         [Fact]
-        public void The_caller_should_be_told_the_account_is_not_available()
+        public async Task The_caller_should_be_notified_of_failure()
         {
+            Result = await MakeDepositCommandHandler.Handle(Request, CancellationToken.None);
+            Result.Succeeded.Should().Be(false);
+        }
+
+        [Fact]
+        public async Task The_caller_should_be_told_the_account_is_not_available()
+        {
+            // await Assert.ThrowsAsync<KeyNotFoundException>(async () => await MakeDepositCommandHandler.Handle(Request));
+            
+            // QA - how to do this with fluent assertions?
+
+            // Result = await MakeDepositCommandHandler.Handle(Request);
+            // Result.Should().BeOfType<KeyNotFoundException>();
+
         }
     }
 

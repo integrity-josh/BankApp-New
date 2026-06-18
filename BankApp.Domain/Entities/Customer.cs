@@ -30,8 +30,8 @@ namespace BankApp.Domain.Entities
 
         private List<Account> _accounts = new List<Account>(); // initialize the list to an empty list so it is never null
         // shorthand for new List<Account>() is just = [];
-        public ReadOnlyCollection<Account> Accounts => _accounts.AsReadOnly(); // can only get the _accounts list, not set it, except by methods within this class 
-
+        public IReadOnlyList<Account> Accounts => _accounts.AsReadOnly(); // can only get the _accounts list, not set it, except by methods within this class 
+        // changed from ReadOnlyCollection to IReadOnlyList
         public void MakeDeposit(int accountId, decimal amount)
         {
             if (amount <= 0)
@@ -57,7 +57,7 @@ namespace BankApp.Domain.Entities
         private Account FindAccount(int accountId)
         {
             var account = _accounts.FirstOrDefault(a => a.Id == accountId);
-            if (account == null)
+            if (account is null)
             {
                 throw new KeyNotFoundException($"Account with Id {accountId} not found for customer with Id {Id}.");
             }

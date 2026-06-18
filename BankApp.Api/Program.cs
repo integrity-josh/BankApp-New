@@ -1,5 +1,6 @@
 using BankApp.Data;
 using BankApp.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,10 +38,30 @@ builder.Services.AddOpenApi();
 
     // when deciding, think of the implication that resources are precious as we are working in systems with 1000s of active users, so small increases in usage are exponential
     
+builder.Services.AddControllers();
+
+
+builder.Services.AddMediatR(
+    // license key optional for paid version
+    cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly)
+    ); // this is per the MediatR documentation on github, and it will register all the handlers in the assembly that contains the Program class, which is this assembly, so it will register all the handlers in this project, which is what we want
+
+builder.Services.AddDbContext<BankAppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))); // add the db context to the DI container, so that it can be injected into the repositories, and then we can use those repositories in our handlers, and then we can use those handlers in our controllers, and then we can use those controllers to handle requests from the client
+
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
     //typeof to inject an abstraction, and then the implementation, and then we can use that abstraction in our code, and it will inject the implementation for us
     // this allows us to do things like create mock data, test versions and implement them in here
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
