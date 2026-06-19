@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BankApp.Domain.Exceptions;
@@ -71,6 +72,11 @@ namespace BankApp.Domain.ValueObjects
             ); // round to 2 decimal places using banker's rounding (MidpointRounding.ToEven) to keep 2 decimal places after multiplication
 
             return new Money(roundedAmount);
+        }
+
+        public override string ToString()
+        {
+            return Amount.ToString("0.00", CultureInfo.InvariantCulture);
         }
 
 
