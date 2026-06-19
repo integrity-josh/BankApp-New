@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using BankApp.Api.Features.MakeDeposit;
+using BankApp.Domain.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -11,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace BankApp.Api.Controllers
 {
     [ApiController]
-    [Route("api/deposits")] // takes the controller name and makes that part of the route
+    [Route("api/[controller]")] // takes the controller name and makes that part of the route
     public class DepositsController(IMediator mediator) : ControllerBase
     {
         [HttpPost]
@@ -29,7 +30,7 @@ namespace BankApp.Api.Controllers
                     // could make an interface for our handler and plug it in here
                         // just like how we set up the makedepositcommandhandler in the test, we could do the same thing here, but instead of using a mock repository, we would use the actual repository that we have set up in our data layer
                     // could also add all the handlers in here, but that would be coupled and make a long controller
-                    // MEDIATOR PATTERN TO DECOUPLE HANDLERS - send request to mediator and controller sends request to the mediator, and then the mediator sends the request to the handler
+                    // MEDIATOR PATTERN TO DECOUPLE HANDLERS - controller sends request to the mediator, and then the mediator sends the request to the handler
                         // there is a great library for this called MediatR, so you don't have to do most of the work for this pattern yourself
                         // nuget package: MediatR
                         // add mediatr to pipleine in program.cs - per mediatr documentation on github
@@ -39,6 +40,10 @@ namespace BankApp.Api.Controllers
             catch(KeyNotFoundException ex)
             {
                 return NotFound(ex.Message);
+            }
+            catch(DomainException ex) // domain exceptions are exceptions that we throw in our domain layer when something goes wrong with the business logic, like an invalid deposit amount
+            {
+                return BadRequest(ex.Message);
             }
             catch(Exception ex)
             {

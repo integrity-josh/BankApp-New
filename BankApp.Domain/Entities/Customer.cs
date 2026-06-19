@@ -32,12 +32,19 @@ namespace BankApp.Domain.Entities
         // shorthand for new List<Account>() is just = [];
         public IReadOnlyList<Account> Accounts => _accounts.AsReadOnly(); // can only get the _accounts list, not set it, except by methods within this class 
         // changed from ReadOnlyCollection to IReadOnlyList
-        public void MakeDeposit(int accountId, decimal amount)
+        public void MakeDeposit(int accountId, Money amount)
         {
+            // enforce deposit amount: could also do this in Account Deposit method
             if (amount <= 0)
             {
                 throw new ArgumentException("Deposit amount must be greater than zero.", nameof(amount));
-            } // could also do this in Account Deposit method
+            } // else if (amount * 100 != Math.Floor(amount * 100)) // to enforce 2 decimal places, we will check if the amount multiplied by 100 is an integer, which means it has at most 2 decimal places, since anything more than 2 decimal places would result in a non-integer when multiplied by 100
+            // { 
+            //     throw new ArgumentException("Deposit amount must have at most 2 decimal places.", nameof(amount));
+            // }
+            // maybe move this to a separate validation method, and tehn we could use it in withdrawal as well, and any other place where we need to validate an amount, so that we don't have to repeat this logic in multiple places
+              // moved this to Money valueobject for validation - not enforcing the greater than 0 in the value object though because withdrawals and balances can be negative
+            
 
             // var account = _accounts.FirstOrDefault(a => a.Id == accountId); // going to be doing this a lot, so could be better later on to put this in its own private in class or public global method for FindAccount, FindAccountById, FIndAccount with a fed query instead of specific byId,etc...  or something like that
             // if (account == null) // or account is null
@@ -48,12 +55,13 @@ namespace BankApp.Domain.Entities
             account.Deposit(amount); // this will call the Deposit method in the account class, which will update the balance
         }
 
-        public decimal GetAccountBalance(int accountId)
+        public Money GetAccountBalance(int accountId)
         {
             var account = FindAccount(accountId);
             return account.Balance;
         }
 
+        // put this method in here instead of account class because it is more of a customer concern than an account concern
         private Account FindAccount(int accountId)
         {
             var account = _accounts.FirstOrDefault(a => a.Id == accountId);

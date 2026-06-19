@@ -46,7 +46,15 @@ builder.Services.AddMediatR(
     cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly)
     ); // this is per the MediatR documentation on github, and it will register all the handlers in the assembly that contains the Program class, which is this assembly, so it will register all the handlers in this project, which is what we want
 
+
 builder.Services.AddDbContext<BankAppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))); // add the db context to the DI container, so that it can be injected into the repositories, and then we can use those repositories in our handlers, and then we can use those handlers in our controllers, and then we can use those controllers to handle requests from the client
+// When your application starts up and reads Program.cs, it builds the dependency injection container and instantiates your BankAppDbContext. 
+    // The very first time EF Core builds the internal database model, it runs OnModelCreating.
+    // When it hits ApplyConfigurationsFromAssembly(typeof(BankAppDbContext).Assembly) in the DbContext, EF Core asks the .NET runtime:
+    // "Look inside the compiled .dll file (Assembly) where BankAppDbContext lives. 
+    // Find every single class that implements the IEntityTypeConfiguration<T> interface."
+        // this is how it finds and applies the CustomerMapping, AccountMapping classes, and any other mapping classes we create in the future, without us having to explicitly tell it about them
+
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
     //typeof to inject an abstraction, and then the implementation, and then we can use that abstraction in our code, and it will inject the implementation for us
@@ -54,6 +62,7 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 
 var app = builder.Build();
 
@@ -70,5 +79,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.MapControllers();
 
 app.Run();

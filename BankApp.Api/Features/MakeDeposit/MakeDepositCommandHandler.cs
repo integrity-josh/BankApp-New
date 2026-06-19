@@ -7,10 +7,11 @@ using BankApp.Domain.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using BankApp.Domain.Specifications;
 using MediatR;
+using BankApp.Domain.ValueObjects;
 
 namespace BankApp.Api.Features.MakeDeposit
 {
-    public class MakeDepositCommandHandler: IRequestHandler<MakeDepositRequest, MakeDepositResult>
+    public class MakeDepositCommandHandler: IRequestHandler<MakeDepositRequest, MakeDepositResult> // implement the IRequestHandler interface from MediatR
     {
         private readonly IRepository<Customer> _customerRepository;
 
@@ -41,7 +42,9 @@ namespace BankApp.Api.Features.MakeDeposit
                 throw new KeyNotFoundException($"Customer with Id {command.CustomerId} not found.");
             }
 
-            customer.MakeDeposit(command.AccountId, command.Amount); // add this here - this will call the MakeDeposit method in the customer class, which will find the account and then call the Deposit method in the account class, which will update the balance
+            var amount = new Money(command.Amount); // convert the decimal amount from the request into a Money value object, which is what the domain layer uses for amounts - this also allows us to have the validation for the amount in the Money value object, so if the amount is invalid (e.g. negative), it will throw an exception there, and we can catch that in the API layer and return a bad request response
+
+            customer.MakeDeposit(command.AccountId, amount); // add this here - this will call the MakeDeposit method in the customer class, which will find the account and then call the Deposit method in the account class, which will update the balance
 
             await _customerRepository.SaveChangesAsync(); // add this here - this will call the SaveAsync method in the base class, which will call the SaveAsync method in the repository, which will save the changes to the database
 

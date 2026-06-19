@@ -22,7 +22,14 @@ namespace BankApp.Data
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(BankAppDbContext).Assembly); // this will apply all the configurations we have in the same assembly as the BankAppDbContext, so we can put our entity configurations in separate classes and they will be automatically applied here, which keeps our code cleaner and more organized, especially as we have more entities and more complex relationships
                 // usually going to be the same assembly as the db context, but we could also use mapping files in a separate assembly if we wanted to, and just specify that assembly here instead
                 // scanning for mappings on assembly happens at server startup and makes cold start a little slow, but after that it will be faster since the mappings are cached, so it's a good practice to use this approach for larger applications with more complex mappings, rather than having all the mappings in the OnModelCreating method which can get very cluttered and hard to maintain as the application grows
-           
+            
+            // When your application starts up and reads Program.cs, it builds the dependency injection container and instantiates your BankAppDbContext. 
+                // The very first time EF Core builds the internal database model, it runs OnModelCreating.
+                // When it hits ApplyConfigurationsFromAssembly(typeof(BankAppDbContext).Assembly) in the DbContext, EF Core asks the .NET runtime:
+                // "Look inside the compiled .dll file (Assembly) where BankAppDbContext lives. 
+                // Find every single class that implements the IEntityTypeConfiguration<T> interface."
+                    // this is how it finds and applies the CustomerMapping, AccountMapping classes, and any other mapping classes we create in the future, without us having to explicitly tell it about them
+
            
             // base.OnModelCreating(modelBuilder);
 
