@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using BankApp.Domain.Exceptions;
 using BankApp.Domain.Infrastructure;
 using BankApp.Domain.ValueObjects;
 
@@ -53,6 +54,22 @@ namespace BankApp.Domain.Entities
             // }
             var account = FindAccount(accountId); // per above, we created the private method to do this without repeat code
             account.Deposit(amount); // this will call the Deposit method in the account class, which will update the balance
+        }
+
+        public void MakeWithdrawal(int accountId, Money amount)
+        {
+            if (amount <= 0)
+            {
+                throw new ArgumentException("Withdrawal amount must be greater than zero.", nameof(amount));
+            } 
+            var account = FindAccount(accountId); 
+
+            if (account.Balance - amount < 0) // enforce that the withdrawal amount cannot be greater than the balance, so that we don't allow overdrafts - this is a business rule that we want to enforce in the domain layer, because it is a rule that is specific to our business/domain, and not a general technical concern, so it belongs in the domain layer rather than the API layer
+            {
+                throw new DomainException($"Withdrawal amount of {amount} exceeds the current balance of {account.Balance} for account with Id {accountId}.");
+            }
+
+            account.Withdraw(amount); 
         }
 
         public Money GetAccountBalance(int accountId)

@@ -28,5 +28,10 @@ namespace BankApp.Domain.Entities
             // } // this conditional can be here or in customer model's makedeposit method - here it is closer to the actual operation, but in customer it is caught earlier on
             Balance += amount; // add the deposit amount to the balance
         }
+
+        public void Withdraw(Money amount)
+        {
+            Balance -= amount; 
+        }
     }
 }

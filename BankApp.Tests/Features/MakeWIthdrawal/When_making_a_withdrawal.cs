@@ -4,34 +4,34 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using FluentAssertions;
-using BankApp.Api.Features.MakeDeposit;
-using BankApp.Domain.Repositories;
+using BankApp.Api.Features.MakeWithdrawal;
 using BankApp.Domain.Entities;
-using NSubstitute;
-using BankApp.Domain.ValueObjects;
-using NSubstitute.ExceptionExtensions;
+using BankApp.Domain.Repositories;
 using BankApp.Domain.Specifications;
+using BankApp.Domain.ValueObjects;
+using NSubstitute;
+using BankApp.Domain.Exceptions;
 
-namespace BankApp.Tests.Features.MakeDeposit
+namespace BankApp.Tests.Features.MakeWIthdrawal
 {
-    public class When_making_a_deposit
+    public class When_making_a_withdrawal
     {
-        public static MakeDepositCommandHandler MakeDepositCommandHandler { get; set; }
-        public static MakeDepositResult Result { get; set; }
-        public static MakeDepositRequest Request { get; set; }
+        public static MakeWithdrawalCommandHandler MakeWithdrawalCommandHandler { get; set; }
+        public static MakeWithdrawalResult Result { get; set; }
+        public static MakeWithdrawalRequest Request { get; set; }
         public static IRepository<Customer> CustomerRepository { get; set; }
 
-        public When_making_a_deposit()
+        public When_making_a_withdrawal()
         {
-            // this is the arrange/setup/initialization for the test class, so that we don't have to repeat it in each test, and if we need to change it later we only have to change it in one place
+            // arrange/setup/initialization
             
             var testAccount = new Account (new Money (200.00m));
             var testCustomer = new Customer(
                 new PersonName("Test", "Customer"), 
-                [testAccount]
+                [testAccount] // aka new list<Account> { testAccount }
                 );
 
-            Request = new MakeDepositRequest
+            Request = new MakeWithdrawalRequest
             {
                 CustomerId = testCustomer.Id, 
                 AccountId = testAccount.Id,
@@ -39,47 +39,26 @@ namespace BankApp.Tests.Features.MakeDeposit
             };
             
 
-            CustomerRepository = Substitute.For<IRepository<Customer>>(); // NSubstitute package for mock data
-            // no longer able to do this with the specific customerId from the request, because we are now using a specification to get the customer in the handler
-            // CustomerRepository.GetByIdAsync(Request.CustomerId).Returns(Task.FromResult(testCustomer));
-                // when handler calls GetByIdAsync
-                // with the specific customerId from the request
-                // return the testCustomer that we created above
-            // so we replace the above with this to match the new way we are getting the customer in the handler with the specification
+            CustomerRepository = Substitute.For<IRepository<Customer>>(); 
             CustomerRepository.GetByIdAsync(Arg.Any<GetSingleCustomerWithAccounts>()).Returns(Task.FromResult(testCustomer));
                 // when handler calls GetByIdAsync
                 // on any GetSingleCustomerWithAccounts specification
                 // return the testCustomer that we created above
 
-            MakeDepositCommandHandler = new MakeDepositCommandHandler(CustomerRepository);
+            MakeWithdrawalCommandHandler = new MakeWithdrawalCommandHandler(CustomerRepository);
         }
 
         [Fact]
-        public async Task The_balance_should_increase_by_the_deposit_amount()
+        public async Task The_balance_should_decrease_by_the_withdrawal_amount()
         {
             // Given (arrange) - implementation of business logic - this is what we expect to change
-            // var command = new MakeDepositRequest
-            // {
-            //     CustomerId = 5,
-            //     AccountId = 17,
-            //     Amount = 100.00m
-            // };
-            // var testAccount = new Account (200.00m);
-            // var testCustomer = new Customer([testAccount]);  // moved to constructor
+            
+            var expectedBalance = 100.00m;
 
-            var expectedBalance = 300.00m;
+            Result = await MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None);
 
-            // CustomerRepository = Substitute.For<IRepository<Customer>>(); // NSubstitute package for mock data
-            // CustomerRepository.GetByIdAsync(command.CustomerId).Returns(testCustomer);
-
-            // var MakeDepositCommandHandler = new MakeDepositCommandHandler(CustomerRepository);
-
-            // When (action/act) - should almost never have to modify the act or assert, unless the expected business logic changes
-            // Result = await MakeDepositCommandHandler.Handle(Request); // can make Handle async, so lets do that, just because we can
-            Result = await MakeDepositCommandHandler.Handle(Request, CancellationToken.None);
-
-
-            // Then (result/assert) - should abosolutely never have to modify the assert, unless the expected business logic changes
+            // Then (result/assert)
+            
             Result.Balance.Should().Be(expectedBalance);
         }
 
@@ -87,21 +66,20 @@ namespace BankApp.Tests.Features.MakeDeposit
         public async Task The_caller_should_be_notified_of_success() // caller wording not customer just because we really don't know if the initiaator of this will be a customer or some other source/user
         {
             
-            // Result = await MakeDepositCommandHandler.Handle(Request);
-            Result = await MakeDepositCommandHandler.Handle(Request, CancellationToken.None);
+            Result = await MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None);
 
             Result.Succeeded.Should().Be(true);
         }
 
     }
-    public class When_making_a_deposit_and_the_account_does_not_exist
+    public class When_making_a_withdrawal_and_the_account_does_not_exist
     {
-        public static MakeDepositCommandHandler MakeDepositCommandHandler { get; set; }
-        public static MakeDepositResult Result { get; set; }
-        public static MakeDepositRequest Request { get; set; }
+        public static MakeWithdrawalCommandHandler MakeWithdrawalCommandHandler { get; set; }
+        public static MakeWithdrawalResult Result { get; set; }
+        public static MakeWithdrawalRequest Request { get; set; }
         public static IRepository<Customer> CustomerRepository { get; set; }
 
-        public When_making_a_deposit_and_the_account_does_not_exist()
+        public When_making_a_withdrawal_and_the_account_does_not_exist()
         {
             // arrange/setup/initialization
             
@@ -111,7 +89,7 @@ namespace BankApp.Tests.Features.MakeDeposit
                 []
                 );
 
-            Request = new MakeDepositRequest
+            Request = new MakeWithdrawalRequest
             {
                 CustomerId = testCustomer.Id,
                 AccountId = 1,
@@ -120,44 +98,43 @@ namespace BankApp.Tests.Features.MakeDeposit
             
 
             CustomerRepository = Substitute.For<IRepository<Customer>>(); // NSubstitute package for mock data
-            // CustomerRepository.GetByIdAsync(Request.CustomerId).Returns(Task.FromResult<Customer?>(null));
             CustomerRepository.GetByIdAsync(Arg.Any<GetSingleCustomerWithAccounts>()).Returns(Task.FromResult(testCustomer));
 
-            MakeDepositCommandHandler = new MakeDepositCommandHandler(CustomerRepository);
+            MakeWithdrawalCommandHandler = new MakeWithdrawalCommandHandler(CustomerRepository);
         }
 
         [Fact]
         public async Task The_caller_should_be_notified_of_failure()
         {
-            // Result = await MakeDepositCommandHandler.Handle(Request, CancellationToken.None);
+            // Result = await MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None);
             // Result.Succeeded.Should().Be(false);
 
             // or?
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => MakeDepositCommandHandler.Handle(Request, CancellationToken.None));
+            await Assert.ThrowsAsync<KeyNotFoundException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
 
         }
 
         [Fact]
         public async Task The_caller_should_be_told_the_account_is_not_available()
         {
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => MakeDepositCommandHandler.Handle(Request, CancellationToken.None));
+            await Assert.ThrowsAsync<KeyNotFoundException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
             
             // QA - how to do this with fluent assertions?
 
-            // Result = await MakeDepositCommandHandler.Handle(Request);
+            // Result = await MakeWithdrawalCommandHandler.Handle(Request);
             // Result.Should().BeOfType<KeyNotFoundException>();
 
         }
     }
 
-    public class When_making_a_deposit_and_the_account_does_not_belong_to_the_customer
+    public class When_making_a_withdrawal_and_the_account_does_not_belong_to_the_customer
     {
-        public static MakeDepositCommandHandler MakeDepositCommandHandler { get; set; }
-        public static MakeDepositResult Result { get; set; }
-        public static MakeDepositRequest Request { get; set; }
+        public static MakeWithdrawalCommandHandler MakeWithdrawalCommandHandler { get; set; }
+        public static MakeWithdrawalResult Result { get; set; }
+        public static MakeWithdrawalRequest Request { get; set; }
         public static IRepository<Customer> CustomerRepository { get; set; }
 
-        public When_making_a_deposit_and_the_account_does_not_belong_to_the_customer()
+        public When_making_a_withdrawal_and_the_account_does_not_belong_to_the_customer()
         {
             // arrange/setup/initialization
             
@@ -167,7 +144,7 @@ namespace BankApp.Tests.Features.MakeDeposit
                 []
                 );
 
-            Request = new MakeDepositRequest
+            Request = new MakeWithdrawalRequest
             {
                 CustomerId = testCustomer.Id,
                 AccountId = testAccount.Id, // this account exists but does not belong to the customer
@@ -179,33 +156,33 @@ namespace BankApp.Tests.Features.MakeDeposit
             // CustomerRepository.GetByIdAsync(Request.CustomerId).Returns(Task.FromResult<Customer?>(null));
             CustomerRepository.GetByIdAsync(Arg.Any<GetSingleCustomerWithAccounts>()).Returns(Task.FromResult(testCustomer));
 
-            MakeDepositCommandHandler = new MakeDepositCommandHandler(CustomerRepository);
+            MakeWithdrawalCommandHandler = new MakeWithdrawalCommandHandler(CustomerRepository);
         }
 
         [Fact]
         public async Task The_caller_should_be_notified_of_failure()
         {
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => MakeDepositCommandHandler.Handle(Request, CancellationToken.None));
+            await Assert.ThrowsAsync<KeyNotFoundException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
 
         }
 
         [Fact]
         public async Task The_caller_should_be_told_the_account_is_not_available()
         {
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => MakeDepositCommandHandler.Handle(Request, CancellationToken.None));
+            await Assert.ThrowsAsync<KeyNotFoundException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
             // should be told on this - don't want to check a the specific message, but we could check that the exception is a KeyNotFoundException and that it contains the accountId in the message
             // or should we add a paramname to the exception and check that (less specific than the message)
         }
     }
 
-    public class When_making_a_deposit_and_the_amount_is_less_than_or_equal_to_zero
+    public class When_making_a_withdrawal_and_the_amount_is_less_than_or_equal_to_zero
     {
-        public static MakeDepositCommandHandler MakeDepositCommandHandler { get; set; }
-        public static MakeDepositResult Result { get; set; }
-        public static MakeDepositRequest Request { get; set; }
+        public static MakeWithdrawalCommandHandler MakeWithdrawalCommandHandler { get; set; }
+        public static MakeWithdrawalResult Result { get; set; }
+        public static MakeWithdrawalRequest Request { get; set; }
         public static IRepository<Customer> CustomerRepository { get; set; }
 
-        public When_making_a_deposit_and_the_amount_is_less_than_or_equal_to_zero()
+        public When_making_a_withdrawal_and_the_amount_is_less_than_or_equal_to_zero()
         {
             // this is the arrange/setup/initialization for the test class, so that we don't have to repeat it in each test, and if we need to change it later we only have to change it in one place
             
@@ -215,7 +192,7 @@ namespace BankApp.Tests.Features.MakeDeposit
                 [testAccount]
                 );
 
-            Request = new MakeDepositRequest
+            Request = new MakeWithdrawalRequest
             {
                 CustomerId = testCustomer.Id, 
                 AccountId = testAccount.Id,
@@ -235,30 +212,77 @@ namespace BankApp.Tests.Features.MakeDeposit
                 // on any GetSingleCustomerWithAccounts specification
                 // return the testCustomer that we created above
 
-            MakeDepositCommandHandler = new MakeDepositCommandHandler(CustomerRepository);
+            MakeWithdrawalCommandHandler = new MakeWithdrawalCommandHandler(CustomerRepository);
         }
 
         [Fact]
         public async Task The_caller_should_be_notified_of_failure()
         {
-            await Assert.ThrowsAsync<ArgumentException>(() => MakeDepositCommandHandler.Handle(Request, CancellationToken.None));
+            await Assert.ThrowsAsync<ArgumentException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
         }
 
         [Fact]
         public async Task The_caller_should_be_told_the_amount_must_be_above_zero()
         {
-            // await Assert.ThrowsAsync<ArgumentException>(() => MakeDepositCommandHandler.Handle(Request, CancellationToken.None));
+            // await Assert.ThrowsAsync<ArgumentException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
           
             // this and similar should_be_told tests can be done in a specific way to check the parameter name to make sure the error was for the right reason, but not too specific to the point that the specific message matters
             // should we do this at all or is this even too specific and we should jsut remove these should be told tests? 
 
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => MakeDepositCommandHandler.Handle(Request, CancellationToken.None));
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
             exception.ParamName.Should().Be("amount");
             // this does what we need for this test, but if we wanted to be more specific and check that the parameter name is also correct, we could do something like this instead:
             // exception.ParamName.Should().Be("amount");
             // this is specific, but it also ensures that the exception is being thrown for the correct reason
         }
     }
+    public class When_making_a_withdrawal_and_the_amount_is_greater_than_the_balance
+    {
+        public static MakeWithdrawalCommandHandler MakeWithdrawalCommandHandler { get; set; }
+        public static MakeWithdrawalResult Result { get; set; }
+        public static MakeWithdrawalRequest Request { get; set; }
+        public static IRepository<Customer> CustomerRepository { get; set; }
 
-    
+        public When_making_a_withdrawal_and_the_amount_is_greater_than_the_balance()
+        {
+            // this is the arrange/setup/initialization for the test class, so that we don't have to repeat it in each test, and if we need to change it later we only have to change it in one place
+            
+            var testAccount = new Account (new Money (200.00m));
+            var testCustomer = new Customer(
+                new PersonName("Test", "Customer"), 
+                [testAccount]
+                );
+
+            Request = new MakeWithdrawalRequest
+            {
+                CustomerId = testCustomer.Id, 
+                AccountId = testAccount.Id,
+                Amount = new Money(300.00m)
+            };
+            
+
+            CustomerRepository = Substitute.For<IRepository<Customer>>(); 
+            CustomerRepository.GetByIdAsync(Arg.Any<GetSingleCustomerWithAccounts>()).Returns(Task.FromResult(testCustomer));
+                // when handler calls GetByIdAsync
+                // on any GetSingleCustomerWithAccounts specification
+                // return the testCustomer that we created above
+
+            MakeWithdrawalCommandHandler = new MakeWithdrawalCommandHandler(CustomerRepository);
+        }
+
+        [Fact]
+        public async Task The_caller_should_be_notified_of_failure()
+        {
+            await Assert.ThrowsAsync<DomainException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
+        }
+
+        [Fact]
+        public async Task The_caller_should_be_told_the_amount_must_be_above_zero()
+        {
+            // var exception = await Assert.ThrowsAsync<ArgumentException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
+            // exception.ParamName.Should().Be("amount");
+            await Assert.ThrowsAsync<DomainException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
+            
+        }
+    }
 }
