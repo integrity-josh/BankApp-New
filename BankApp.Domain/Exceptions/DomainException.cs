@@ -5,10 +5,15 @@ using System.Threading.Tasks;
 
 namespace BankApp.Domain.Exceptions
 {
-    public class DomainException : Exception
+    public class DomainException : ArgumentException
     {
         public DomainException(string message)
             : base(message)
+        {
+        }
+
+        public DomainException(string message, string paramName)
+            : base(message, paramName)
         {
         }
 
@@ -16,5 +21,6 @@ namespace BankApp.Domain.Exceptions
             : base(message, innerException)
         {
         }
+    
     }
 }

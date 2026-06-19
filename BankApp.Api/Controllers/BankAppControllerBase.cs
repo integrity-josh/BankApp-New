@@ -20,10 +20,10 @@ namespace BankApp.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (DomainException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            // catch (DomainException ex)
+            // {
+            //     return BadRequest(ex.Message);
+            // } // domain exception now a child of argument exception, so we don't need to catch it separately
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);

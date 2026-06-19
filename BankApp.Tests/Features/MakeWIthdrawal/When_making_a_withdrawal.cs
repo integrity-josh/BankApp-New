@@ -118,8 +118,8 @@ namespace BankApp.Tests.Features.MakeWIthdrawal
         public async Task The_caller_should_be_told_the_account_is_not_available()
         {
             await Assert.ThrowsAsync<KeyNotFoundException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
-            
-            // QA - how to do this with fluent assertions?
+        
+            // QA - how to do this with fluid assertions?
 
             // Result = await MakeWithdrawalCommandHandler.Handle(Request);
             // Result.Should().BeOfType<KeyNotFoundException>();
@@ -170,6 +170,7 @@ namespace BankApp.Tests.Features.MakeWIthdrawal
         public async Task The_caller_should_be_told_the_account_is_not_available()
         {
             await Assert.ThrowsAsync<KeyNotFoundException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
+            // QA
             // should be told on this - don't want to check a the specific message, but we could check that the exception is a KeyNotFoundException and that it contains the accountId in the message
             // or should we add a paramname to the exception and check that (less specific than the message)
         }
@@ -279,9 +280,9 @@ namespace BankApp.Tests.Features.MakeWIthdrawal
         [Fact]
         public async Task The_caller_should_be_told_the_amount_must_be_above_zero()
         {
-            // var exception = await Assert.ThrowsAsync<ArgumentException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
-            // exception.ParamName.Should().Be("amount");
-            await Assert.ThrowsAsync<DomainException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
+            var exception = await Assert.ThrowsAsync<DomainException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
+            exception.ParamName.Should().Be("amount");
+            
             
         }
     }

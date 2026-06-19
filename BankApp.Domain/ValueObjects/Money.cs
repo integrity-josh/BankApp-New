@@ -17,7 +17,7 @@ namespace BankApp.Domain.ValueObjects
 
             if (scale > 2) // if there are more than 2 decimal places, throw an exception, because we don't want to allow that, since money should only have 2 decimal places
             { 
-                throw new DomainException("Amount must have at most 2 decimal places.");
+                throw new DomainException("Amount must have at most 2 decimal places.", nameof(amount));
             }
             
 
