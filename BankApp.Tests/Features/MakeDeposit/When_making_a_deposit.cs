@@ -101,6 +101,8 @@ namespace BankApp.Tests.Features.MakeDeposit
         public static MakeDepositRequest Request { get; set; }
         public static IRepository<Customer> CustomerRepository { get; set; }
 
+// QA ANSWER: for this repeat code, could clean up with a base class, for arranging, setting up common test methods like given then when, etc... with deposit/withdrawal specific or wherever works for more test specific base as well
+    // withsubject pattern - look into
         public When_making_a_deposit_and_the_account_does_not_exist()
         {
             // arrange/setup/initialization
@@ -142,6 +144,20 @@ namespace BankApp.Tests.Features.MakeDeposit
         {
             await Assert.ThrowsAsync<KeyNotFoundException>(() => MakeDepositCommandHandler.Handle(Request, CancellationToken.None));
             
+            // for this sort of test, try to get away from specific wording on error messages if you can, as these can be changed later on by developers
+                // if a dev changes the type of error that is thrown by this though, then it should be broken, and should be failed on this test, so changes to types of error message, etc. should be known and intentional
+
+            // we currently are basing this sort of logic on exceptions, but it would make sense based on the business requirement of succeeded true, to also do:
+                // succeeded false, with a message in that response object that's returned on failure, instead of based on exceptions
+                // we may speak with the client to decide on this, as they didn't specifically ask for it, but it would make sense
+                // in most cases, from all controller methods we would want to return an envelope that has a set structure, response object, collection of error messages, date/time/etc info
+                    // create this envelope perhaps in the controller base class
+                    // ok returns envelope with success response, error returns either response data with failure, or if more appropriate, returns no response data
+
+                        // would generally do this unless their current setup requires otherwise, but we try to stick to doing it the best way, and refactor the existing code around it, if not too extensive
+    
+
+
             // QA - how to do this with fluent assertions?
 
             // Result = await MakeDepositCommandHandler.Handle(Request);
@@ -257,6 +273,10 @@ namespace BankApp.Tests.Features.MakeDeposit
             // this does what we need for this test, but if we wanted to be more specific and check that the parameter name is also correct, we could do something like this instead:
             // exception.ParamName.Should().Be("amount");
             // this is specific, but it also ensures that the exception is being thrown for the correct reason
+
+            // note this will break if the parameter name is not set
+                // when choosing the scenario for test assertion, make sure the failure scenario we get is the one we want
+                // test something that should not be changed when refactoring the related code
         }
     }
 

@@ -28,6 +28,7 @@ namespace BankApp.Api.Controllers
             {
                 return StatusCode(500, ex.Message);
             }
+            // could also inject imediator to reduce code further than this base controller currently does
         }
     }
 }

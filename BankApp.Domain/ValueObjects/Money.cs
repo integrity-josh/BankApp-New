@@ -77,7 +77,8 @@ namespace BankApp.Domain.ValueObjects
         public override string ToString()
         {
             return Amount.ToString("0.00", CultureInfo.InvariantCulture);
-        }
+        } // when it comes to display formatting stuff like this, usually don't put this in the domain, as this is something that realistically would be open, normally something to be done on the front end
+            // be careful about putting formatting info in the domain unless we absolutely want to force this QA ANSWER
 
 
     }

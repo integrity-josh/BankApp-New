@@ -278,11 +278,13 @@ namespace BankApp.Tests.Features.MakeWIthdrawal
         }
 
         [Fact]
-        public async Task The_caller_should_be_told_the_amount_must_be_above_zero()
+        public async Task The_caller_should_be_told_the_amount_cannot_be_greater_than_the_balance()
         {
             var exception = await Assert.ThrowsAsync<DomainException>(() => MakeWithdrawalCommandHandler.Handle(Request, CancellationToken.None));
             exception.ParamName.Should().Be("amount");
             
+            // QA ANSWER: for should be told - could do look for specific test, or could put error messages in a constants file so tests can refer to the constant instead of the strings of the error message, also could throw and check different types of exceptions (like subclasses of the domain exception)
+                // if I did the above, probably wouldn't make domain exception a child of the argument exception
             
         }
     }

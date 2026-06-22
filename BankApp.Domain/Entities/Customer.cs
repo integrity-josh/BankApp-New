@@ -69,6 +69,13 @@ namespace BankApp.Domain.Entities
                 throw new DomainException($"Withdrawal amount of {amount} exceeds the current balance of {account.Balance} for account with Id {accountId}.", nameof(amount));
             } // {amount} automatically calls ToString on Money type to display the amount in the error message
 
+                // could move this balance check to the account class because the balance is actually in the account
+                // also maybe move greater than zero check to account
+                    // essentially have all logic related to making the deposit/withdrawal at the account level as the customer is not affected by them
+                    // then customer would be smaller, account is super small now so it would make sense to have that logic in there
+                        // ** could also do something like transaction amount that inherits from money and must be greater than 0
+                        // QA ANSWER
+
             account.Withdraw(amount); 
         }
 
