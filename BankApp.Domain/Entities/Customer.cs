@@ -85,6 +85,18 @@ namespace BankApp.Domain.Entities
             return account.Balance;
         }
 
+        public void CloseAccount(int accountId)
+        {
+            var account = FindAccount(accountId);
+
+            if ((decimal)account.Balance != 0m)
+            {
+                throw new InvalidOperationException($"Cannot close account with Id {accountId} because balance must be zero.");
+            }
+
+            account.Close();
+        }
+
         // put this method in here instead of account class because it is more of a customer concern than an account concern
         private Account FindAccount(int accountId)
         {

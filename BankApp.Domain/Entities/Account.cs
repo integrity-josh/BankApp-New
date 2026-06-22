@@ -11,13 +11,16 @@ namespace BankApp.Domain.Entities
     {
         // constructor private so change can only be made through named methods in the class
         private Account() { }
-        public Account(Money balance) // force them to enter a balance when creating an account, because it can't be null - null doesn't equal zero inherently
-        {
+        public Account(Money balance, AccountStatus status) // force them to enter a balance and account status when creating an account, because this is core functionality and these should always be explicitly set, never null and never implicit
+        { 
             Balance = balance;
+            Status = status;
         }
+        
 
         public int Id { get; private set; } // once entity base class is set up we will inherit the Id property from it
         public Money Balance { get; private set; } // balance can be negative so not enforcing positivity here
+        public AccountStatus Status { get; private set; }
 
         public void Deposit(Money amount)
         {
@@ -32,6 +35,11 @@ namespace BankApp.Domain.Entities
         public void Withdraw(Money amount)
         {
             Balance -= amount; 
+        }
+
+        public void Close()
+        {
+            Status = AccountStatus.Closed;
         }
     }
 }
