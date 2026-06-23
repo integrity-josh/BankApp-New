@@ -79,6 +79,29 @@ namespace BankApp.Domain.Entities
             account.Withdraw(amount); 
         }
 
+        public Account CreateAccount(AccountType accountType, Money initialDeposit)
+        {
+            if (accountType is null)
+            {
+                throw new KeyNotFoundException("Account type not found.");
+            }
+
+            if (initialDeposit < 100)
+            {
+                throw new DomainException("Initial deposit must be at least 100.", nameof(initialDeposit));
+            }
+
+            if (_accounts.Count == 0 && accountType != AccountType.Savings)
+            {
+                throw new DomainException("The first account must be savings.", nameof(accountType));
+            }
+
+            var account = new Account(initialDeposit, accountType);
+            _accounts.Add(account);
+
+            return account;
+        }
+
         public Money GetAccountBalance(int accountId)
         {
             var account = FindAccount(accountId);

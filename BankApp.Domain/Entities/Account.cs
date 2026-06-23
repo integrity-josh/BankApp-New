@@ -11,16 +11,23 @@ namespace BankApp.Domain.Entities
     {
         // constructor private so change can only be made through named methods in the class
         private Account() { }
-        public Account(Money balance, AccountStatus status) // force them to enter a balance and account status when creating an account, because this is core functionality and these should always be explicitly set, never null and never implicit
+        public Account(Money balance, AccountType accountType) // force them to enter a balance, account status, account type when creating an account, because this is core functionality and these should always be explicitly set, never null and never implicit
         { 
             Balance = balance;
-            Status = status;
+            Type = accountType;
         }
+
+        // public Account(Money balance, AccountStatus status, AccountType accountType)
+        //     : this(balance, status)
+        // {
+        //     Type = accountType;
+        // }
         
 
         public int Id { get; private set; } // once entity base class is set up we will inherit the Id property from it
         public Money Balance { get; private set; } // balance can be negative so not enforcing positivity here
-        public AccountStatus Status { get; private set; }
+        public AccountStatus Status { get; private set; } = AccountStatus.Open; // default to open when account is created, but can be changed to closed later on
+        public AccountType Type { get; private set; }
 
         public void Deposit(Money amount)
         {

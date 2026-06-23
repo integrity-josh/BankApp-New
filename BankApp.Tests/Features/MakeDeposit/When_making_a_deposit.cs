@@ -25,7 +25,7 @@ namespace BankApp.Tests.Features.MakeDeposit
         {
             // this is the arrange/setup/initialization for the test class, so that we don't have to repeat it in each test, and if we need to change it later we only have to change it in one place
             
-            var testAccount = new Account (new Money (200.00m), AccountStatus.Open);
+            var testAccount = new Account (new Money (200.00m), AccountType.Savings);
             var testCustomer = new Customer(
                 new PersonName("Test", "Customer"), 
                 [testAccount]
@@ -177,7 +177,7 @@ namespace BankApp.Tests.Features.MakeDeposit
         {
             // arrange/setup/initialization
             
-            var testAccount = new Account (new Money (200.00m), AccountStatus.Open);
+            var testAccount = new Account (new Money (200.00m), AccountType.Savings);
             var testCustomer = new Customer(
                 new PersonName("Test", "Customer"), 
                 []
@@ -225,7 +225,7 @@ namespace BankApp.Tests.Features.MakeDeposit
         {
             // this is the arrange/setup/initialization for the test class, so that we don't have to repeat it in each test, and if we need to change it later we only have to change it in one place
             
-            var testAccount = new Account (new Money (200.00m), AccountStatus.Open);
+            var testAccount = new Account (new Money (200.00m), AccountType.Savings);
             var testCustomer = new Customer(
                 new PersonName("Test", "Customer"), 
                 [testAccount]

@@ -26,7 +26,7 @@ namespace BankApp.Tests.Features.CloseAccount
         {
             // arrange/setup/initialization
             
-            testAccount = new Account(new Money(0.00m), AccountStatus.Open); 
+            testAccount = new Account(new Money(0.00m), AccountType.Savings); 
             var testCustomer = new Customer(
                 new PersonName("Test", "Customer"), 
                 [testAccount]
@@ -115,7 +115,7 @@ namespace BankApp.Tests.Features.CloseAccount
         {
             // arrange/setup/initialization
             
-            var testAccount = new Account(new Money(0.00m), AccountStatus.Open);
+            var testAccount = new Account(new Money(0.00m), AccountType.Savings);
             var testCustomer = new Customer(
                 new PersonName("Test", "Customer"), 
                 []
@@ -157,7 +157,7 @@ namespace BankApp.Tests.Features.CloseAccount
         {
             // arrange/setup/initialization
             
-            var testAccount = new Account(new Money(100.00m), AccountStatus.Open); // non-zero balance
+            var testAccount = new Account(new Money(100.00m), AccountType.Savings); // non-zero balance
             var testCustomer = new Customer(
                 new PersonName("Test", "Customer"), 
                 [testAccount]
